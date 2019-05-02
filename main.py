@@ -64,8 +64,7 @@ def DrawGLScene():
         global edges
 
         for e in edges:
-            if(e.visible):
-                e.Draw()
+            e.Draw()
  
 
         glEnd()
@@ -125,16 +124,24 @@ def GetCenter(edges):
     for i in range(3):
         center[i] /= len(points)
     return center
-
-def IsVisible(edge, body):
-    point = np.array([edge.x1, edge.y1, edge.z1, 1]).dot(body)
+def IsVisible(edge, side):
+    global E
+    return E.dot(side) < 0
+    """
+    point = E.dot(body)
     for d in point:
         if d > 0: return False
     point = np.array([edge.x2, edge.y2, edge.z2, 1]).dot(body)
     for d in point:
         if d > 0: return False
+    """
+
     return True
 
+
+def IsOnSide(edge, normal):
+    return (np.array([edge.x1, edge.y1, edge.z1, 1]).dot(normal.T) == 0 and 
+    (np.array([edge.x2, edge.y2, edge.z2, 1]).dot(normal.T)) == 0)
 
 def main():
  
@@ -148,6 +155,10 @@ def main():
         for n in normal:
             print(n)
         global edges
+
+        global E
+        E = np.array([(0, 10, 10, 1)])
+
         edges = (
             Edge(1, 1, -1, -1, 1, -1),#
             Edge(-1, 1, -1, -1, 1, 1),#
@@ -184,9 +195,18 @@ def main():
                     col[i] *= -1
         print("body2", body)
         print("dot", center.dot(body))
-        #for e in edges:
-            #e.visible = IsVisible(e, body)
-        print("V", np.array([edges[0].x1, edges[0].y1, edges[0].z1, 1]).dot(body))
+        #edges[2].visible = False
+        for side in body.T:
+            print("SIDE", IsVisible(E, side))
+            if(IsVisible(E, side)):
+                for e in edges:
+                    if IsOnSide(e, side):
+                        e.visible = True
+                        pass
+            
+        print(body.T[0])
+
+        print("E", E.dot(body.T[0]))
  
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
